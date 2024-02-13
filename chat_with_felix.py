@@ -68,13 +68,6 @@ def analyze_excerpt(excerpt):
             if "message" in response.choices[0]
             else response.choices[0].get("text", "").strip()
         )
-
-        # Print the full response text
-        print("FULL RESPONSE TEXT:", response_text)
-        print("                                   ")
-        print(
-            "                                                                                   "
-        )
         response_data = json.loads(response_text)
 
         has_interview_question = response_data.get("has_interview_question", False)
@@ -86,32 +79,6 @@ def analyze_excerpt(excerpt):
             "interview_question": interview_question,
             "reasoning": reasoning,
         }
-
-        # print("Response Text: " + response_text)
-        # Assuming the response structure includes reasoning as part of the response text
-        # split_response = response_text.split("Reasoning: ")
-        # question_detection = "Yes" if "contains a question" in response_text else "No"
-        # reasoning = (
-        #     split_response[1].strip()
-        #     if len(split_response) > 1
-        #     else "No reasoning provided."
-        # )
-
-        # likely_contains_question = "Yes" in question_detection
-        # detected_question = (
-        #     ""  # You would need to refine how to extract the specific question
-        # )
-        # print(reasoning + "1  REASONING BEFORE return")
-        # print(detected_question + "  QUESTION")
-        # Return a dictionary including the reasoning
-        # print("FINAL BEFORE RETURN")
-        # print("                             ")
-        # return {
-        #     "contains_question": likely_contains_question,
-        #     "detected_question": detected_question,
-        #     "reasoning": reasoning,
-        # }
-
     except Exception as e:
         print("Error:", str(e))
         return {
@@ -127,6 +94,6 @@ if __name__ == "__main__":
     )
     user_message = input("You: ")
     response = analyze_excerpt(user_message)
-    # print(
-    #     f"Contains Question: {response['contains_question']}, Detected Question: '{response['detected_question']}', Reasoning: '{response['reasoning']}'"
-    # )
+    print(
+        f"Contains Question: {response['has_interview_question']}, Detected Question: '{response['interview_question']}', Reasoning: '{response['reasoning']}'"
+    )

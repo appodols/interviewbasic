@@ -5,9 +5,9 @@ def run_test_cases():
     test_cases = [
         {
             "excerpt": {
-                "conversation": "Hey, there we go.\nHey, are going hmm, all\nright. Yeah. Hey, Gordon. Sorry. I wasn't sure if you were running late, or maybe I had the wrong link and it wasn't working. So I tried on my phone first.\nThat's nice. How are you doing\ntoday? Good man. glad. Glad you were able to make time to chat. I'm excited to learn more about open phone. What about yourself? How's the Thursday going?",
+                "conversation": "Sounds like the game plan. Let's do it.\nCool. Why don't you start with a brief intro?",
                 "contains_question": True,
-                "question": "How's the Thursday going?",
+                "question": "Why don't you start with a brief intro?",
             }
         }
         # Add more test cases as needed
@@ -25,20 +25,25 @@ def run_test_cases():
             print(f"Response for test case {index} is not a dictionary.")
             continue
 
-        expected_contains_question = test_case["excerpt"]["contains_question"]
-        actual_contains_question = response.get("contains_question", False)
-        if expected_contains_question == actual_contains_question:
+        expected_has_interview_question = test_case["excerpt"]["contains_question"]
+        actual_has_interview_question = response.get("has_interview_question", False)
+        if expected_has_interview_question == actual_has_interview_question:
             correct_boolean_matches += 1
 
         expected_question = test_case["excerpt"]["question"].lower()
-        actual_question = response.get("detected_question", "").lower()
-        if expected_contains_question and expected_question == actual_question:
+        actual_question = response.get("interview_question", "").lower()
+        print(
+            "  expected_question"
+            + expected_question
+            + "    actual question"
+            + actual_question
+        )
+        if expected_has_interview_question and expected_question == actual_question:
             correct_question_identification += 1
 
         reasoning_summary[f"reasoning{index}"] = response.get(
             "reasoning", "No reasoning provided."
         )
-
     print(
         f"{correct_boolean_matches}/{total_excerpts} boolean statements and {correct_question_identification}/{total_excerpts} questions were identified correctly."
     )
