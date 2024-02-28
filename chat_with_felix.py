@@ -2,8 +2,19 @@ import os
 import openai
 import json
 
+# from chat_with_felix import analyze_excerpt
 
-def analyze_excerpt(excerpt):
+
+def analyze_excerpt(excerpt, testing=False):
+    if excerpt == "":
+        return {
+            # "has_interview_question": False,
+            "interview_question": "",
+            # "reasoning": "The excerpt is empty",
+        }
+    # possibly not needed because of the model
+    print("                        ")
+    print("THIS IS AN EXCERPT" + excerpt)
     common_questions = [
         "Tell me about a time when you had to prioritize certain product features over others. How did you make your decision?",
         "Describe a situation where you had to work with a difficult stakeholder. How did you handle it?",
@@ -20,11 +31,19 @@ def analyze_excerpt(excerpt):
     openai.api_key = os.getenv("OPENAI_API_KEY")
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-0125-preview",
             messages=[
                 {
                     "role": "system",
                     "content": "Provide your answers to the below prompt in JSON format with the following keys: has_interview_question, interview_question, reasoning",
+                },
+                {
+                    "role": "system",
+                    "content": "You wll not make questions up unless there is direct evidence of the question from the excerpt",
+                },
+                {
+                    "role": "system",
+                    "content": 'If you get a blank excerpt, then you will respond with an empty JSON, i.e "has_interview_question:" false, "interview_question": "", "reasoning": ""',
                 },
                 {
                     "role": "system",
@@ -46,6 +65,11 @@ def analyze_excerpt(excerpt):
                     Example 3:
                     User: "Why don't you start with a brief intro?"
                     Assistant: This is an essential interview question
+                    
+                    Example 5:
+                    User: "Why don't you start with a brief intro?"
+                    Assistant: This is an essential interview question
+                    
                 
 
                     Based on this guidance, analyze the following conversation excerpt for important interview questions: \"{excerpt}\"
@@ -53,7 +77,35 @@ def analyze_excerpt(excerpt):
                 },
                 {
                     "role": "system",
-                    "content": "You always provide your reasoning for determining the intervieq question (if applicable) by starting the explanation with 'Reasoning'",
+                    "content": """
+    You are an intelligent assistant analyzing interview transcripts. Your task is to extract important interview questions, ignoring any clarification questions such as 'right?' or small talk like 'how are you doing today?' AND explain your reasoning. Focus on identifying substantial questions that contribute to understanding the interviewee's experience and qualifications. Here are examples for guidance:
+
+    Example 1:
+    User: "Tell me about a time you had to pivot your product strategy. What led to the pivot?"
+    Assistant: This is an important interview question focusing on the candidate's adaptability and decision-making process.
+
+    Example 2:
+    User: "?"
+    Assistant: This is a clarification question and should be ignored because it does not provide enough context to be considered a substantial interview question.
+
+    Example 3:
+    User: "a time when you had to advocate for additional resources for your project. How do you justify the need and what was the outcome?"
+    Assistant: This is an important interview question as it explores the candidate's negotiation skills and ability to secure resources.
+
+    Negative Example 1:
+    User: "a product vision?"
+    Assistant: This excerpt is too brief and lacks context, making it difficult to be considered a substantial interview question. It might be part of a larger question but on its own, it doesn't provide enough information to be an important interview question.
+
+    Negative Example 2:
+    User: "well with others. How did you address it?"
+    Assistant: While this follows an important question, taken out of context, it appears as a fragment and does not stand alone as a substantial interview question without the preceding context.
+
+    Based on this guidance, analyze the following conversation excerpt for important interview questions: "{excerpt}"
+    """,
+                },
+                {
+                    "role": "system",
+                    "content": "You always provide your reasoning for determining the interview question (if applicable) by starting the explanation with 'Reasoning'",
                 },
             ],
             temperature=0.7,
@@ -68,17 +120,28 @@ def analyze_excerpt(excerpt):
             if "message" in response.choices[0]
             else response.choices[0].get("text", "").strip()
         )
+
         response_data = json.loads(response_text)
+        # print("Raw response:", response_text)
 
         has_interview_question = response_data.get("has_interview_question", False)
         interview_question = response_data.get("interview_question", "")
         reasoning = response_data.get("reasoning", "No reasoning provided.")
 
-        return {
-            "has_interview_question": has_interview_question,
-            "interview_question": interview_question,
-            "reasoning": reasoning,
-        }
+        if testing == True:
+            print(
+                f"Contains Question: {response['has_interview_question']}, Detected Question: '{response['interview_question']}', Reasoning: '{response['reasoning']}'"
+            )
+            return {
+                "has_interview_question": has_interview_question,
+                "interview_question": interview_question,
+                "reasoning": reasoning,
+            }
+        else:
+            # print("else entered")
+            print(f"Detected Question: '{interview_question}'")
+            return {"interview_question": interview_question}
+
     except Exception as e:
         print("Error:", str(e))
         return {
@@ -94,6 +157,10 @@ if __name__ == "__main__":
     )
     user_message = input("You: ")
     response = analyze_excerpt(user_message)
-    print(
-        f"Contains Question: {response['has_interview_question']}, Detected Question: '{response['interview_question']}', Reasoning: '{response['reasoning']}'"
-    )
+#     if testing:
+#         print(
+#             f"Contains Question: {response['has_interview_question']}, Detected Question: '{response['interview_question']}', Reasoning: '{response['reasoning']}'"
+#         )
+# else:
+#     # Corrected the syntax here
+#     print(f"Detected Question: '{response['interview_question']}'")

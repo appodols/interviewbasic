@@ -1,4 +1,5 @@
 from chat_with_felix import analyze_excerpt
+from is_equal import is_equal
 
 
 def run_test_cases():
@@ -74,13 +75,17 @@ def run_test_cases():
 
         expected_question = test_case["excerpt"]["question"].lower()
         actual_question = response.get("interview_question", "").lower()
-        print(
-            "  expected_question"
-            + expected_question
-            + "    actual question"
-            + actual_question
-        )
-        if expected_has_interview_question and expected_question == actual_question:
+
+        equality_response = is_equal(expected_question, actual_question)
+        is_same_question = equality_response.get("is_same_question", False)
+
+        # print(
+        #     "  expected_question"
+        #     + expected_question
+        #     + "    actual question"
+        #     + actual_question
+        # )
+        if expected_has_interview_question and is_same_question:
             correct_question_identification += 1
 
         reasoning_summary[f"reasoning{index}"] = response.get(
