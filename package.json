@@ -1,0 +1,21 @@
+{
+  "name": "interviewcopilot",
+  "version": "1.0.0",
+  "description": "",
+  "source": "static/interview_excerpt_analyzer.html",
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "parcel": "^2.12.0",
+    "process": "^0.11.10"
+  },
+  "scripts": {
+    "start": "parcel serve static/interview_excerpt_analyzer.html",
+    "build": "parcel build static/interview_excerpt_analyzer.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "speechmatics": "^3.1.7"
+  }
+}

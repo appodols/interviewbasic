@@ -2,17 +2,16 @@ import os
 import openai
 import json
 
-# from chat_with_felix import analyze_excerpt
-
 
 def analyze_excerpt(excerpt, testing=False):
+    print("wtf")
     if excerpt == "":
         return {
             # "has_interview_question": False,
             "interview_question": "",
             # "reasoning": "The excerpt is empty",
         }
-    # possibly not needed because of the model
+
     print("                        ")
     print("THIS IS AN EXCERPT" + excerpt)
     common_questions = [
@@ -61,16 +60,10 @@ def analyze_excerpt(excerpt, testing=False):
                     Example 3:
                     User: "How are you doing today?"
                     Assistant: This is small talk and should be disregarded.
-                    
+
                     Example 3:
                     User: "Why don't you start with a brief intro?"
                     Assistant: This is an essential interview question
-                    
-                    Example 5:
-                    User: "Why don't you start with a brief intro?"
-                    Assistant: This is an essential interview question
-                    
-                
 
                     Based on this guidance, analyze the following conversation excerpt for important interview questions: \"{excerpt}\"
                     """,
@@ -115,14 +108,21 @@ def analyze_excerpt(excerpt, testing=False):
             presence_penalty=0,
         )
         # Extract the full response text correctly
-        response_text = (
-            response.choices[0].message["content"]
-            if "message" in response.choices[0]
-            else response.choices[0].get("text", "").strip()
-        )
+
+        # print("Raw OpenAI API response:", response)
+        if "message" in response.choices[0]:
+            # Extract the 'content' and clean it by removing the triple backticks and 'json' label
+            response_text = response.choices[0].message["content"]
+            # Remove the triple backticks and the word 'json'
+            response_text = (
+                response_text.replace("```json\n", "").replace("\n```", "").strip()
+            )
+        else:
+            # If the 'message' field is not there, fall back to 'text'
+            response_text = response.choices[0].get("text", "").strip()
 
         response_data = json.loads(response_text)
-        # print("Raw response:", response_text)
+        print("Raw response:", response_text)
 
         has_interview_question = response_data.get("has_interview_question", False)
         interview_question = response_data.get("interview_question", "")
@@ -147,7 +147,7 @@ def analyze_excerpt(excerpt, testing=False):
         return {
             "contains_question": False,
             "detected_question": "",
-            "reasoning": "Error occurred.",
+            "reasoning": "ErrorS occurred.",
         }
 
 
@@ -157,10 +157,3 @@ if __name__ == "__main__":
     )
     user_message = input("You: ")
     response = analyze_excerpt(user_message)
-#     if testing:
-#         print(
-#             f"Contains Question: {response['has_interview_question']}, Detected Question: '{response['interview_question']}', Reasoning: '{response['reasoning']}'"
-#         )
-# else:
-#     # Corrected the syntax here
-#     print(f"Detected Question: '{response['interview_question']}'")

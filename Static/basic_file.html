@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Assistant</title>
+    <style>
+        /* Your CSS styles */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <label for="submitTranscript" class="label">Submit Transcript</label>
+        <textarea id="submitTranscript" rows="4" placeholder="Paste your interview transcript here..."></textarea>
+        <button id="submitTranscriptButton">Submit Transcript</button>
+    </div>
+
+    <div class="container">
+        <label for="extractedInterview" class="label">Extracted Interview Question</label>
+        <textarea id="extractedInterview" rows="2" placeholder="The extracted question will appear here..." readonly></textarea>
+    </div>
+
+    <script>
+        document.getElementById('submitTranscriptButton').addEventListener('click', async () => {
+            const transcriptText = document.getElementById('submitTranscript').value;
+            const response = await fetch('http://localhost:8000/analyze-text/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: transcriptText }),
+            });
+            const data = await response.json(); // Assuming the server response contains the extracted question
+            document.getElementById('extractedInterview').value = data.analysis || 'Bananas detected';
+        });
+    </script>
+</body>
+</html>

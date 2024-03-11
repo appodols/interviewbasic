@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Transcript Analyzer</title>
+    <script type="module" src="fetchandstart.js"></script>
+
+    <body>
+        <div>
+            <label for="transcript">Paste your interview transcript in:</label><br>
+            <textarea id="transcript" rows="4" cols="50"></textarea><br>
+            <button onclick="submitTranscript()">Submit</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <label for="interviewQuestion">Extracted interview question:</label><br>
+            <textarea id="interviewQuestion" rows="2" cols="50" readonly></textarea>
+        </div>
+        <div style="margin-top: 20px;">
+            <button id="start" onclick="startRecording()">Start Recording</button>
+            <button id="stop" onclick="stopRecording()" disabled>Stop Recording</button>
+        </div>
+    </body>
+
+
+
+    <script>
+    console.log("script entered")
+        async function submitTranscript() {
+            const transcriptText = document.getElementById('transcript').value;
+            console.log("Submitting transcript:", transcriptText);
+
+            const response = await fetch('http://localhost:8000/analyze-text/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: transcriptText }),
+            });
+
+            console.log("Response status:", response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Response data:", data);
+                document.getElementById('interviewQuestion').value = data.interview_question || 'No question detected';
+            } else {
+                console.error('Failed to submit transcript');
+            }
+        }
+
+        async function startRecording() {
+            //note unimplementd or attached to anything
+            socket = new WebSocket('ws://localhost:8000/ws');
+            socket.onopen = () => console.log('Socket opened');
+            socket.onmessage = (message) => console.log('Transcription:', message.data);
+            socket.onclose = () => console.log('Socket closed');
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+                    socket.send(e.data);
+                }
+            };
+            mediaRecorder.start(1000); // Send audio data every 1000ms
+            document.getElementById('start').disabled = true;
+            document.getElementById('stop').disabled = false;
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            socket.close();
+            document.getElementById('start').disabled = false;
+            document.getElementById('stop').disabled = true;
+        }
+    </script>
+</head>
+</html>
