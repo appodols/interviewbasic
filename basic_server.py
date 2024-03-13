@@ -1,11 +1,21 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from chat_with_felix import analyze_excerpt
 import os
+
+
+class CustomHeaderMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # Add headers to prevent caching
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
 
 app = FastAPI()
 
