@@ -70,8 +70,7 @@
             console.log("Response data:", data);
     
             // Access the 'interview_question' from the 'analysis' object and set it as the value
-            const interviewQuestion = data.analysis.interview_question || 'No question detected';
-            console.log("Interview Question:", interviewQuestion);
+            const interviewQuestion = data.interview_question || 'No question detected';
             document.getElementById('extractedInterview').value = interviewQuestion;
         }
     </script>
