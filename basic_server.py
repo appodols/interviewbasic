@@ -41,7 +41,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def get_root():
     # Use the absolute path to return the HTML file as a response
     absolute_path_to_html = os.path.join(
-        "static", "basic_file.html"
+        "/Users/alexanderpodolsky/Documents/InterviewCoPilot/static", "basic_file.html"
     )
     return FileResponse(absolute_path_to_html)
 
@@ -53,10 +53,7 @@ def analyze_text(excerpt: InterviewExcerpt):
     analysis_result = analyze_excerpt(excerpt.text)
     print(analysis_result)
     # You return a dictionary because FastAPI automatically converts it to JSON
-    # return {"analysis": analysis_result}
-    return analysis_result #Because, your frontend is directly accessing `data.analysis.interview_question`
-
-
+    return {"analysis": analysis_result}
 
 
 if __name__ == "__main__":
