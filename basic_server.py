@@ -53,7 +53,10 @@ def analyze_text(excerpt: InterviewExcerpt):
     analysis_result = analyze_excerpt(excerpt.text)
     print(analysis_result)
     # You return a dictionary because FastAPI automatically converts it to JSON
-    return {"analysis": analysis_result}
+    # return {"analysis": analysis_result}
+    return analysis_result #Because, your frontend is directly accessing `data.analysis.interview_question`
+
+
 
 
 if __name__ == "__main__":
