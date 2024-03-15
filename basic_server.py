@@ -7,7 +7,6 @@ import uvicorn
 from fastapi.staticfiles import StaticFiles
 from chat_with_felix import analyze_excerpt
 from fastapi.templating import Jinja2Templates
-import os
 
 class CustomHeaderMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -47,7 +46,6 @@ def analyze_text(excerpt: InterviewExcerpt):
     # Assuming `analyze_excerpt` is a function that takes a string and returns analysis
     analysis_result = analyze_excerpt(excerpt.text)
     print(analysis_result)
-    # You return a dictionary because FastAPI automatically converts it to JSON
     return {"analysis": analysis_result}
 
 if __name__ == "__main__":
