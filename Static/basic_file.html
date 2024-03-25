@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mango Assistant</title>
+    <title>Mango Assistant - Live Transcription</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
             background-color: #f4f4f4;
         }
-        .container {
+        .container, h1, p {
             margin-bottom: 20px;
             background-color: #fff;
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .title {
+        .title, h1 {
             font-size: 24px;
             color: #333;
             margin-bottom: 10px;
@@ -45,18 +45,61 @@
     </style>
 </head>
 <body>
+    <h1>Transcribe Audio With FastAPI</h1>
+    <p id="status">Connection status will go here</p>
+    <p id="transcript"></p>
+
     <div class="container">
-        <div class="title">Banana Transcript!</div>
+        <div class="title">Transcript</div>
         <textarea id="submitTranscript" placeholder="Apples"></textarea>
         <button onclick="submitTranscript()">Submit your Banana!</button>
     </div>
 
     <div class="container">
-        <div class="title">Papaya Question!</div>
-        <textarea id="extractedInterview" placeholder="The papaya question will appear here!" readonly></textarea>
+        <div class="title">Question</div>
+        <textarea id="extractedInterview" placeholder="Question will appear here" readonly></textarea>
     </div>
 
     <script>
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                return alert('Browser not supported');
+            }
+
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm',
+            });
+
+            const socket = new WebSocket('ws://localhost:8000/listen');
+
+            socket.onopen = () => {
+                document.querySelector('#status').textContent = 'Connected';
+                console.log({ event: 'onopen' });
+                mediaRecorder.addEventListener('dataavailable', async (event) => {
+                    if (event.data.size > 0 && socket.readyState == 1) {
+                        socket.send(event.data);
+                    }
+                });
+                mediaRecorder.start(250);
+            };
+
+            socket.onmessage = async (message) => {
+                const transcript = message.data; // Directly use the message data as the transcript
+                console.log("Transcript:", transcript);
+                document.querySelector('#transcript').textContent += ' ' + transcript;
+
+                // Here, instead of sending to a separate endpoint, we might want to simply display or process the message data locally
+            };
+
+            socket.onclose = () => {
+                console.log({ event: 'onclose' });
+            };
+
+            socket.onerror = (error) => {
+                console.log({ event: 'onerror', error });
+            };
+        });
+
         async function submitTranscript() {
             console.log("submitting")
             const transcriptText = document.getElementById('submitTranscript').value;
@@ -70,12 +113,10 @@
             console.log("Response data:", data);
     
             // Access the 'interview_question' from the 'analysis' object and set it as the value
-            const interviewQuestion = data.analysis.interview_question || 'No question detected';
+            const interviewQuestion = data.analysis ? data.analysis.interview_question || 'No question detected' : 'No question detected';
             console.log("Interview Question:", interviewQuestion);
             document.getElementById('extractedInterview').value = interviewQuestion;
         }
     </script>
-    <!-- Update the version parameter as needed to avoid caching -->
-    <script src="script.js?v=1.5"></script>
 </body>
 </html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Live Transcription</title>
+    </head>
+    <body>
+        <h1>Transcribe Audio With FastAPI</h1>
+        <p id="status">Connection status will go here</p>
+        <p id="transcript"></p>
+
+        <div>
+            <label for="transcript2">Paste your interview transcript in:</label><br>
+            <textarea id="transcript2" rows="4" cols="50"></textarea><br>
+            <button onclick="submitTranscript()">Submit</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <label for="interviewQuestion">Extracted interview question:</label><br>
+            <textarea id="interviewQuestion" rows="2" cols="50" readonly></textarea>
+        </div>
+
+        <script>
+            navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    return alert('Browser not supported');
+                }
+
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm',
+                });
+
+                const socket = new WebSocket('ws://localhost:8000/listen');
+
+                socket.onopen = () => {
+                    document.querySelector('#status').textContent = 'Connected';
+                    console.log({ event: 'onopen' });
+                    mediaRecorder.addEventListener('dataavailable', async (event) => {
+                        if (event.data.size > 0 && socket.readyState == 1) {
+                            socket.send(event.data);
+                        }
+                    });
+                    mediaRecorder.start(250);
+                };
+
+                socket.onmessage = async (message) => {
+                    const transcript = message.data; // Directly use the message data as the transcript
+                    console.log("Transcript:", transcript);
+                    document.querySelector('#transcript').textContent += ' ' + transcript;
+
+                    // Send the transcript to the FastAPI backend for question extraction
+                    const response = await fetch('http://localhost:8000/analyze-text/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: transcript }),
+                    });
+
+                    // Log the entire JSON response
+                    // console.log("Response data:", response);
+
+                    const data = await response.json();
+                    console.log("Parsed response data:", data);
+
+                    if (response.ok) {
+                        // const data = await response.json();
+                        console.log(data)
+                        console.log("ok entered")
+                        // Check if a new, non-empty question is received
+                        if (data.interview_question && data.interview_question.trim() !== "") {
+                            console.log("question received")
+                            // Only update the UI if there's a new question
+                            document.getElementById('interviewQuestion').value = data.interview_question;
+                        }
+                    } else {
+                        console.error('Failed to submit transcript');
+                    }
+                };
+
+                socket.onclose = () => {
+                    console.log({ event: 'onclose' });
+                };
+
+                socket.onerror = (error) => {
+                    console.log({ event: 'onerror', error });
+                };
+            });
+
+            async function submitTranscript() {
+                // console.log("submit entered");
+                const transcriptText = document.getElementById('transcript2').value;
+                // console.log("Submitting transcript:", transcriptText);
+
+                const response = await fetch('http://localhost:8000/analyze-text/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: transcriptText }),
+                });
+
+                console.log("Response status!:", response.status);
+                const data = await response.json();
+                console.log("Parsed response data:", data);
+                console.log("Parsed analysis", data.analysis);
+                if (response.ok) {
+                    // const data = await response.json();
+                    console.log("Response data:", data);
+                    document.getElementById('interviewQuestion').value = data.analysis.interview_question || 'No questions detected';
+                } else {
+                    console.error('Failed to submit transcript');
+                }
+            }
+        </script>
+    </body>
+</html>
