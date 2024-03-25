@@ -35,13 +35,14 @@ app.add_middleware(
 
 # Serve static files from the "static" directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(CustomHeaderMiddleware)
 
 
 @app.get("/", response_class=FileResponse)
 def get_root():
     # Use the absolute path to return the HTML file as a response
     absolute_path_to_html = os.path.join(
-        "/Users/alexanderpodolsky/Documents/InterviewCoPilot/static", "basic_file.html"
+        "/Users/alexanderpodolsky/Documents/InterviewCoPilot2/Static", "basic_file.html"
     )
     return FileResponse(absolute_path_to_html)
 
