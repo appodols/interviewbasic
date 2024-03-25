@@ -12,6 +12,8 @@
             <label for="transcript2">Paste your interview transcript in:</label><br>
             <textarea id="transcript2" rows="4" cols="50"></textarea><br>
             <button onclick="submitTranscript()">Submit</button>
+            <!-- Stopwatch Display Added Here -->
+            <p>Time taken: <span id="timeTaken">0</span> milliseconds</p>
         </div>
         <div style="margin-top: 20px;">
             <label for="interviewQuestion">Extracted interview question:</label><br>
@@ -19,6 +21,8 @@
         </div>
 
         <script>
+            let startTime; // Declare startTime outside of the function to be accessible inside it
+
             navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
                 if (!MediaRecorder.isTypeSupported('audio/webm')) {
                     return alert('Browser not supported');
@@ -45,33 +49,9 @@
                     const transcript = message.data; // Directly use the message data as the transcript
                     console.log("Transcript:", transcript);
                     document.querySelector('#transcript').textContent += ' ' + transcript;
-
-                    // Send the transcript to the FastAPI backend for question extraction
-                    const response = await fetch('http://localhost:8000/analyze-text/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text: transcript }),
-                    });
-
-                    // Log the entire JSON response
-                    // console.log("Response data:", response);
-
-                    const data = await response.json();
-                    console.log("Parsed response data:", data);
-
-                    if (response.ok) {
-                        // const data = await response.json();
-                        console.log(data)
-                        console.log("ok entered")
-                        // Check if a new, non-empty question is received
-                        if (data.interview_question && data.interview_question.trim() !== "") {
-                            console.log("question received")
-                            // Only update the UI if there's a new question
-                            document.getElementById('interviewQuestion').value = data.interview_question;
-                        }
-                    } else {
-                        console.error('Failed to submit transcript');
-                    }
+                    
+                    // Assume we are sending the data here for analysis
+                    // submitTranscript();  // Uncomment if you want to submit the transcript when received
                 };
 
                 socket.onclose = () => {
@@ -84,24 +64,24 @@
             });
 
             async function submitTranscript() {
-                // console.log("submit entered");
+                // Start the stopwatch
+                startTime = performance.now();
+                
                 const transcriptText = document.getElementById('transcript2').value;
-                // console.log("Submitting transcript:", transcriptText);
-
                 const response = await fetch('http://localhost:8000/analyze-text/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: transcriptText }),
                 });
 
-                console.log("Response status!:", response.status);
-                const data = await response.json();
-                console.log("Parsed response data:", data);
-                console.log("Parsed analysis", data.analysis);
                 if (response.ok) {
-                    // const data = await response.json();
-                    console.log("Response data:", data);
+                    const data = await response.json();
                     document.getElementById('interviewQuestion').value = data.analysis.interview_question || 'No questions detected';
+
+                    // Stop the stopwatch and calculate the time taken
+                    const endTime = performance.now();
+                    const timeTaken = endTime - startTime;
+                    document.getElementById('timeTaken').textContent = timeTaken.toFixed(2);
                 } else {
                     console.error('Failed to submit transcript');
                 }
@@ -109,3 +89,4 @@
         </script>
     </body>
 </html>
+
