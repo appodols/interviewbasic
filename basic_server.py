@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from deepgram import Deepgram
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from chat_with_felix import analyze_excerpt
+from chat_with_felix2 import analyze_excerpt
 from pydantic import BaseModel
 
 import os
