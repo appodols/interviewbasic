@@ -13,7 +13,6 @@ def analyze_excerpt(excerpt, testing=False):
     print("Excerpt here:  " + excerpt)
     # Assuming you have set OPENAI_API_KEY in your environment variables
     openai.api_key = os.getenv("OPENAI_API_KEY2")
-    # openai.api_key = "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"
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4-0125-preview",
