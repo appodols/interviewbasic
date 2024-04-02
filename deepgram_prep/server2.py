@@ -1,14 +1,16 @@
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from typing import Dict, Callable
-from deepgram import Deepgram
-from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from chat_with_felix_groq import analyze_excerpt
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-
+from typing import Dict, Callable
+import uvicorn
+import requests
 import os
+from dotenv import load_dotenv
+from deepgram import Deepgram
+from chat_with_felix import analyze_excerpt
 
 load_dotenv()
 
@@ -19,23 +21,26 @@ class InterviewExcerpt(BaseModel):
     text: str
 
 
-# Make sure to include the origins you want to allow. Use ["*"] to allow all origins.
-origins = [
-    "http://localhost:8000",  # Adjust the port if your client is served on a different port
-    "http://127.0.0.1:8000",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows the specified origins
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
 
-dg_client = Deepgram(os.getenv("DEEPGRAM_API_KEY"))
+
+dg_client = Deepgram("c63446f4d781c3f89dff8f0528fe5289ac4269c7")
 
 templates = Jinja2Templates(directory="templates")
+
+
+@app.post("/analyze-text/")
+def analyze_text(excerpt: InterviewExcerpt):
+    print("analyze text called")
+    analysis_result = analyze_excerpt(excerpt.text)
+    # print("anaylze text has been called")
+    return analysis_result
 
 
 async def process_audio(fast_socket: WebSocket):
@@ -71,16 +76,6 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
 @app.get("/", response_class=HTMLResponse)
 def get(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.post("/analyze-text/")
-def analyze_text(excerpt: InterviewExcerpt):
-    # print("Analyze text called")
-    # Assuming `analyze_excerpt` is a function that takes a string and returns analysis
-    analysis_result = analyze_excerpt(excerpt.text)
-    print(analysis_result)
-    # You return a dictionary because FastAPI automatically converts it to JSON
-    return {"analysis": analysis_result}
 
 
 @app.websocket("/listen")
