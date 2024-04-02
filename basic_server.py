@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, WebSocket
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, FileResponse
+
+# from fastapi.templating import Jinja2Templates
 from typing import Dict, Callable
 from deepgram import Deepgram
 from dotenv import load_dotenv
@@ -35,7 +36,7 @@ app.add_middleware(
 
 dg_client = Deepgram(os.getenv("DEEPGRAM_API_KEY"))
 
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
 
 async def process_audio(fast_socket: WebSocket):
@@ -70,7 +71,7 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
 
 @app.get("/", response_class=HTMLResponse)
 def get(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return FileResponse("index.html")
 
 
 @app.post("/analyze-text/")
