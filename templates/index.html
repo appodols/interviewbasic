@@ -11,7 +11,7 @@
         <div>
             <label for="transcript2">Paste your interview transcript in:</label><br>
             <textarea id="transcript2" rows="4" cols="50"></textarea><br>
-            <button onclick="submitTranscript()">Submit</button>
+            <button onclick="submitTranscriptFromTextbox()">Submit</button>
             <!-- Stopwatch Display Added Here -->
             <p>Time taken: <span id="timeTaken">0</span> milliseconds</p>
         </div>
@@ -49,9 +49,7 @@
                     const transcript = message.data; // Directly use the message data as the transcript
                     console.log("Transcript:", transcript);
                     document.querySelector('#transcript').textContent += ' ' + transcript;
-                    
-                    // Assume we are sending the data here for analysis
-                    // submitTranscript();  // Uncomment if you want to submit the transcript when received
+                    submitTranscript(transcript); // Now calling submitTranscript function
                 };
 
                 socket.onclose = () => {
@@ -63,11 +61,15 @@
                 };
             });
 
-            async function submitTranscript() {
+            function submitTranscriptFromTextbox() {
+                const transcriptText = document.getElementById('transcript2').value;
+                submitTranscript(transcriptText); // Pass the text to submitTranscript
+            }
+
+            async function submitTranscript(transcriptText) {
                 // Start the stopwatch
                 startTime = performance.now();
                 
-                const transcriptText = document.getElementById('transcript2').value;
                 const response = await fetch('http://localhost:8000/analyze-text/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -89,4 +91,3 @@
         </script>
     </body>
 </html>
-

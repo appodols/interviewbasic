@@ -2,14 +2,18 @@ import os
 from groq import Groq  # Assuming Groq is a module you have available.
 import json
 import re
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def analyze_excerpt(excerpt, testing=False):
+    print(excerpt)
     if not excerpt:
         return {"interview_question": ""}
 
     # Assuming you have set GROQ_API_KEY in your environment variables
-    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     try:
         chat_completion = client.chat.completions.create(
             model="mixtral-8x7b-32768",
@@ -20,7 +24,7 @@ def analyze_excerpt(excerpt, testing=False):
                 },
                 {
                     "role": "system",
-                    "content": 'If you get a blank excerpt, then you will respond with an empty JSON, i.e "interview_question": "", "reasoning": ""',
+                    "content": "Your content will be a JSON object with the key 'interview_question' and the value being the extracted interview question. If no question is found, the value should be an empty string.",
                 },
                 {
                     "role": "system",
@@ -67,14 +71,15 @@ def analyze_excerpt(excerpt, testing=False):
         # Accessing the content string
         # Get the content string from the message
         content_string = chat_completion.choices[0].message.content
-
+        print("content_string")
+        print(content_string)
         # Use regex to find the interview_question and reasoning within the string
         interview_question_match = re.search(
             r'"interview_question":\s*"(.*?)"', content_string
         )
 
         # print("intervire question")
-        print(interview_question_match)
+        # print(interview_question_match)
 
         reasoning_match = re.search(r'"reasoning":\s*"(.*?)"', content_string)
 
@@ -86,7 +91,7 @@ def analyze_excerpt(excerpt, testing=False):
 
         return {
             "interview_question": interview_question,
-            "reasoning": reasoning,
+            # "reasoning": reasoning,
         }
     except Exception as e:
         return {"interview_question": "", "reasoning": f"Error occurred: {str(e)}"}
